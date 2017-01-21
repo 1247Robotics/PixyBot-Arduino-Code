@@ -1,6 +1,8 @@
 #include <SPI.h>  
 #include <Pixy.h>
 
+#define DEADZONE 5 //deadzone in pixels
+
 // This is the main Pixy object 
 Pixy pixy;
 
@@ -27,19 +29,9 @@ void loop() {
     // frame would bog down the Arduino
     if (i%50==0){
       Serial.println(blocks);
-      if (blocks == 2){
-        //Serial.println(pixy.blocks[0].x);
-        //Serial.println(pixy.blocks[1].x);
-        //Serial.println(averageX());
-        //Serial.print(",");
-        //Serial.println(averageY());
-        //Serial.print(pixy.blocks[0].x+(pixy.blocks[0].width/2));
-        //Serial.print(",");
-        //Serial.println(pixy.blocks[1].x-(pixy.blocks[1].width/2));
-        Serial.println(wholeWidth());
-        Serial.print(distance());
-        Serial.println(" ft");
-      }
+      Serial.print(distance());
+      Serial.println(" ft");
+      turnRobot();
     }
   }  
 }
@@ -62,5 +54,16 @@ int wholeWidth(){
 }
 double distance(){
   return 1/(((8.006*pow(10,-3))*wholeWidth())+(8.664*pow(10,-4)));
+}
+
+void turnRobot(){
+  Serial.println(averageX());
+  if (averageX() > DEADZONE){
+    Serial.println("turn left");
+  } else if (averageX() < DEADZONE*-1) {
+    Serial.println("turn right");
+  } else {
+    Serial.println("go straight");
+  }
 }
 
