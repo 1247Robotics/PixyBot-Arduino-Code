@@ -3,12 +3,22 @@
 
 #define DEADZONE 5 //deadzone in pixels
 
+int TurnLeft = 13;
+int TurnRight = 12;
+
+
 // This is the main Pixy object 
 Pixy pixy;
+
+int watchDog = 0;
+int watchDogMax = 1000;
 
 void setup(){
   Serial.begin(9600);
   Serial.print("Starting...\n");
+
+  pinMode(TurnLeft, OUTPUT);
+  pinMode(TurnRight, OUTPUT);
 
   pixy.init();
 }
@@ -21,19 +31,33 @@ void loop() {
   // grab blocks!
   blocks = pixy.getBlocks();
   
-  // If there are detect blocks, print them!
   if (blocks){
     i++;
-    
-    // do this (print) every 50 frames because printing every
-    // frame would bog down the Arduino
-    if (i%50==0){
-      Serial.println(blocks);
+    watchDog = 0;
+  } else {
+    watchDog++;
+  }
+
+  //every 50 frames
+  if (i%50 == 0){
+    if (blocks == 2){ //gear or shoot
       Serial.print(distance());
       Serial.println(" ft");
       turnRobot();
+      i = 1;
+    } else {
+      Serial.println("Rope??");
+      i = 1;
+      digitalWrite(TurnLeft, LOW);
+      digitalWrite(TurnRight, LOW);
     }
-  }  
+  }
+
+  if (watchDog == watchDogMax){
+    Serial.println("No Blocks");
+    digitalWrite(TurnLeft, LOW);
+    digitalWrite(TurnRight, LOW);
+  }
 }
 
 int average(int a, int b){
@@ -57,13 +81,19 @@ double distance(){
 }
 
 void turnRobot(){
-  Serial.println(averageX());
-  if (averageX() > DEADZONE){
-    Serial.println("turn left");
-  } else if (averageX() < DEADZONE*-1) {
-    Serial.println("turn right");
-  } else {
-    Serial.println("go straight");
-  }
+    Serial.println(averageX());
+    if (averageX() > DEADZONE){
+      Serial.println("turn left");
+      digitalWrite(TurnLeft, HIGH);
+      digitalWrite(TurnRight, LOW);
+    } else if (averageX() < DEADZONE*-1) {
+      Serial.println("turn right");
+      digitalWrite(TurnLeft, LOW);
+      digitalWrite(TurnRight, HIGH);
+    } else {
+      Serial.println("go straight");
+      digitalWrite(TurnLeft, HIGH);
+      digitalWrite(TurnRight, HIGH);
+    }
 }
 
